@@ -26,6 +26,9 @@ public class IssueServiceImpl implements IssueService {
     @Autowired
     private IssueRepository issueRepository;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     // Create an Issue
     @Override
     @Transactional
@@ -70,14 +73,19 @@ public class IssueServiceImpl implements IssueService {
     @Override
     @Transactional
     public void deleteIssue(Long id) {
-        // 1. Check if the issue exists.
-        //    This will throw ResourceNotFoundException if it doesn't.
-        if (!issueRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Issue not found with id: " + id);
+        // 1. Find the issue first, or throw a 404.
+        //    We must use findById so we can get the imageUrl.
+        Issue issue = issueRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + id));
+
+        // 2. Check if an image is attached
+        if (issue.getImageUrl() != null && !issue.getImageUrl().isBlank()) {
+            // 3. If so, tell the file service to delete it from the disk
+            fileStorageService.deleteFile(issue.getImageUrl());
         }
 
-        // 2. If it exists, delete it.
-        issueRepository.deleteById(id);
+        // 4. Finally, delete the issue from the database
+        issueRepository.delete(issue); // We can use delete(issue) since we already fetched it
     }
 
     //Get Issues for current user

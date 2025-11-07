@@ -1,6 +1,8 @@
-// This is a new file
 import React, { useState, useEffect } from "react";
 import { getMyIssues } from "../services/issueService";
+import { useNotification } from "../context/NotificationContext"; // We'll import this just in case
+
+// Import MUI components
 import {
   Typography,
   Container,
@@ -10,12 +12,17 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  CardMedia, // 1. NEW IMPORT for images
 } from "@mui/material";
+
+// 2. DEFINE OUR BACKEND URL FOR MEDIA
+const BACKEND_URL = "http://localhost:8080";
 
 function MyIssuesPage() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { showNotification } = useNotification(); // Get the hook
 
   useEffect(() => {
     // Fetch issues when the component mounts
@@ -27,14 +34,22 @@ function MyIssuesPage() {
         setIssues(data);
       } catch (apiError) {
         console.error("Failed to fetch my issues:", apiError);
-        setError(apiError.message || "Could not load your issues.");
+        const errorMessage =
+          apiError.response &&
+          apiError.response.data &&
+          apiError.response.data.message
+            ? apiError.response.data.message
+            : "Could not load your issues.";
+        setError(errorMessage);
+        // Show a snackbar notification on error
+        showNotification(errorMessage, "error");
       } finally {
         setLoading(false);
       }
     };
 
     fetchIssues();
-  }, []); // Empty array means this runs once on load
+  }, []); // The empty array [] means this runs only once
 
   if (loading) {
     return (
@@ -44,7 +59,8 @@ function MyIssuesPage() {
     );
   }
 
-  if (error) {
+  // Show persistent error on the page
+  if (error && issues.length === 0) {
     return <Alert severity="error">{error}</Alert>;
   }
 
@@ -59,6 +75,18 @@ function MyIssuesPage() {
         <Box>
           {issues.map((issue) => (
             <Card key={issue.id} sx={{ mb: 2 }}>
+              {/* --- 3. ADD THIS BLOCK (Conditional Image) --- */}
+              {issue.imageUrl && (
+                <CardMedia
+                  component="img"
+                  height="300"
+                  image={`${BACKEND_URL}${issue.imageUrl}`}
+                  alt={issue.title}
+                  sx={{ objectFit: "cover" }}
+                />
+              )}
+              {/* --- END OF NEW BLOCK --- */}
+
               <CardContent>
                 <Box
                   sx={{
@@ -71,7 +99,6 @@ function MyIssuesPage() {
                   <Typography variant="h6" component="h2">
                     {issue.title}
                   </Typography>
-                  {/* We can color-code the status chip */}
                   <Chip
                     label={issue.status}
                     color={
@@ -81,6 +108,7 @@ function MyIssuesPage() {
                         ? "warning"
                         : "default"
                     }
+                    size="small"
                   />
                 </Box>
                 <Typography color="text.secondary" gutterBottom>
@@ -90,8 +118,7 @@ function MyIssuesPage() {
                   {issue.description}
                 </Typography>
                 <Typography color="text.secondary" variant="caption">
-                  Reported by: {issue.submittedByUsername} on{" "}
-                  {new Date(issue.createdAt).toLocaleDateString()}
+                  Reported on: {new Date(issue.createdAt).toLocaleDateString()}
                 </Typography>
               </CardContent>
             </Card>

@@ -4,7 +4,7 @@ import {
   updateIssueStatus,
   deleteIssue,
 } from "../services/issueService";
-import { useNotification } from "../context/NotificationContext"; // 1. Import notification hook
+import { useNotification } from "../context/NotificationContext";
 
 // Import MUI components
 import {
@@ -15,6 +15,7 @@ import {
   Alert,
   Card,
   CardContent,
+  CardMedia, // 1. NEW IMPORT for images
   CardActions,
   Button,
   Select,
@@ -24,12 +25,16 @@ import {
   Chip,
 } from "@mui/material";
 
+// 2. DEFINE OUR BACKEND URL FOR MEDIA
+const BACKEND_URL = "http://localhost:8080";
+
 function AdminDashboardPage() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { showNotification } = useNotification(); // 2. Get the notification function
+  const { showNotification } = useNotification();
 
+  // ... (fetchIssues, handleStatusChange, and handleDelete functions are all the same)
   // Function to fetch all issues
   const fetchIssues = async () => {
     try {
@@ -39,7 +44,6 @@ function AdminDashboardPage() {
       setIssues(data);
     } catch (apiError) {
       console.error("Failed to fetch issues:", apiError);
-      // Use the local error state for a persistent error on the page
       const errorMessage =
         apiError.response &&
         apiError.response.data &&
@@ -52,29 +56,18 @@ function AdminDashboardPage() {
     }
   };
 
-  // Fetch issues when the component mounts
-  useEffect(() => {
-    fetchIssues();
-  }, []); // The empty array [] means this runs only once
-
   // Handler for changing an issue's status
   const handleStatusChange = async (id, newStatus) => {
     try {
-      // 1. Call the API
       const updatedIssue = await updateIssueStatus(id, newStatus);
-
-      // 2. Update the local state to match
       setIssues((prevIssues) =>
         prevIssues.map((issue) =>
           issue.id === id ? { ...issue, status: updatedIssue.status } : issue
         )
       );
-
-      // 3. Show success notification
       showNotification("Issue status updated successfully!", "success");
     } catch (apiError) {
       console.error("Failed to update status:", apiError);
-      // 4. Show error notification
       const errorMessage =
         apiError.response &&
         apiError.response.data &&
@@ -87,23 +80,15 @@ function AdminDashboardPage() {
 
   // Handler for deleting an issue
   const handleDelete = async (id) => {
-    // Optional: Confirm before deleting
     if (!window.confirm("Are you sure you want to delete this issue?")) {
       return;
     }
-
     try {
-      // 1. Call the API
       await deleteIssue(id);
-
-      // 2. Update local state by filtering out the deleted issue
       setIssues((prevIssues) => prevIssues.filter((issue) => issue.id !== id));
-
-      // 3. Show success notification
       showNotification("Issue deleted successfully!", "success");
     } catch (apiError) {
       console.error("Failed to delete issue:", apiError);
-      // 4. Show error notification
       const errorMessage =
         apiError.response &&
         apiError.response.data &&
@@ -114,9 +99,7 @@ function AdminDashboardPage() {
     }
   };
 
-  // --- 3. Render Logic ---
-
-  // 3a. Show loading spinner while fetching
+  // --- (Render Logic is the same) ---
   if (loading) {
     return (
       <Box
@@ -132,7 +115,6 @@ function AdminDashboardPage() {
     );
   }
 
-  // 3b. Show persistent error if fetching failed
   if (error) {
     return (
       <Alert severity="error" sx={{ mt: 2 }}>
@@ -147,7 +129,6 @@ function AdminDashboardPage() {
         Admin Dashboard
       </Typography>
 
-      {/* 3c. Show empty state message */}
       {issues.length === 0 ? (
         <Typography
           variant="h6"
@@ -158,10 +139,21 @@ function AdminDashboardPage() {
           No issues found.
         </Typography>
       ) : (
-        // 3d. Render the list of issues
         <Box>
           {issues.map((issue) => (
             <Card key={issue.id} sx={{ mb: 2, backgroundColor: "#f9f9f9" }}>
+              {/* --- 3. ADD THIS BLOCK (Conditional Image) --- */}
+              {issue.imageUrl && (
+                <CardMedia
+                  component="img"
+                  height="300" // Set a fixed height for consistency
+                  image={`${BACKEND_URL}${issue.imageUrl}`}
+                  alt={issue.title}
+                  sx={{ objectFit: "cover" }} // Ensures the image covers the area
+                />
+              )}
+              {/* --- END OF NEW BLOCK --- */}
+
               <CardContent>
                 <Box
                   sx={{
@@ -198,13 +190,11 @@ function AdminDashboardPage() {
                 </Typography>
               </CardContent>
               <CardActions sx={{ justifyContent: "flex-end", pr: 2, pb: 2 }}>
-                {/* Status Update Dropdown */}
                 <FormControl size="small" sx={{ minWidth: 150, mr: 1 }}>
                   <InputLabel>Change Status</InputLabel>
                   <Select
                     value={issue.status}
                     label="Change Status"
-                    // Call handler when a new value is selected
                     onChange={(e) =>
                       handleStatusChange(issue.id, e.target.value)
                     }
@@ -215,7 +205,6 @@ function AdminDashboardPage() {
                   </Select>
                 </FormControl>
 
-                {/* Delete Button */}
                 <Button
                   size="small"
                   color="error"

@@ -4,6 +4,7 @@ import com.cityconnect.backend.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod; // <-- 1. NEW IMPORT
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,7 +40,7 @@ public class SecurityConfig {
                 // 1. Disable CSRF
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // --- 2. ADD THIS NEW LINE TO ENABLE OUR GLOBAL CORS BEAN ---
+                // 2. Enable our Global CORS Bean
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 3. Set session management to STATELESS
@@ -48,13 +49,26 @@ public class SecurityConfig {
 
                 // 4. Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/hello-world").permitAll()
-                        .requestMatchers("/api/v1/data/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/api/v1/issues/**").hasRole("CITIZEN")
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+                                // --- 3. START OF UPDATED RULES ---
+                                // Public endpoints (everyone can access)
+                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/hello-world").permitAll()
+                                .requestMatchers("/api/v1/data/**").permitAll()
+                                .requestMatchers("/h2-console/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/media/**").permitAll() // <-- NEW: Allows everyone to VIEW images
+
+                                // Citizen-only endpoints
+                                .requestMatchers("/api/v1/issues/**").hasRole("CITIZEN")
+
+                                // User (Citizen or Admin) endpoints
+                                .requestMatchers("/api/v1/files/upload").hasAnyRole("CITIZEN", "ADMIN") // <-- NEW: Secures file uploads
+
+                                // Admin-only endpoints
+                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                                // All other requests must be authenticated
+                                .anyRequest().authenticated()
+                        // --- 4. END OF UPDATED RULES ---
                 );
 
         // 5. Add our custom JWT filter
@@ -66,7 +80,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // --- 7. PASTE THIS ENTIRE NEW BEAN METHOD ---
     /**
      * Creates a Global CORS configuration bean.
      * This allows requests from our frontend (running on http://localhost:5173).

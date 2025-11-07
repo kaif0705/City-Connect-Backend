@@ -1,72 +1,95 @@
-import React, { useState } from "react";
-import { createIssue } from "../services/issueService";
-import { useNotification } from "../context/NotificationContext"; // 1. Import the notification hook
+import React, { useState, useRef } from 'react'; // 1. Import useRef
+import { createIssue } from '../services/issueService';
+import { uploadFile } from '../services/fileService'; // 2. Import the new file service
+import { useNotification } from '../context/NotificationContext';
 
-// Import MUI components for the form
+// Import MUI components
 import {
-  Button,
-  TextField,
-  Box,
-  Typography,
-  MenuItem,
-  CircularProgress,
-} from "@mui/material";
+    Button,
+    TextField,
+    Box,
+    Typography,
+    MenuItem,
+    CircularProgress,
+    Alert, // We'll use this for file selection feedback
+    Icon
+} from '@mui/material';
+import { PhotoCamera } from '@mui/icons-material'; // Import an icon
 
 function IssueForm() {
   // Form fields state
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Pothole"); // Default category
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('Pothole');
+  const [file, setFile] = useState(null); // 3. Add state for the file
+  const fileInputRef = useRef(null); // 4. Add a ref for the file input
 
   // Loading and notification state
   const [loading, setLoading] = useState(false);
-  const { showNotification } = useNotification(); // 2. Get the notification function
+  const [loadingText, setLoadingText] = useState(''); // For user feedback
+  const { showNotification } = useNotification();
 
-  // We will add a file state here in the next phase (Image Upload)
-  // const [file, setFile] = useState(null);
+  // 5. Handler for when a file is selected
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      // Optional: Add file size/type validation here
+      if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
+        showNotification("File is too large! (Max 5MB)", "error");
+        setFile(null);
+        if(fileInputRef.current) fileInputRef.current.value = null; // Reset input
+      } else {
+        setFile(selectedFile);
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent page reload
+    e.preventDefault();
     setLoading(true);
 
-    const issueData = {
-      title,
-      description,
-      category,
-      // Hardcode location for now. We can add a map picker later.
-      latitude: 18.5204,
-      longitude: 73.8567,
-      imageUrl: null, // We will add this in the next phase
-    };
+    let imageUrl = null; // This will hold the URL from the backend
 
     try {
-      // 3. Call the createIssue API service
+      // --- STEP 1: UPLOAD FILE (if one is selected) ---
+      if (file) {
+        setLoadingText('Uploading image...');
+        imageUrl = await uploadFile(file); // Call file service
+        showNotification('Image uploaded successfully!', 'info');
+      }
+
+      // --- STEP 2: SUBMIT ISSUE (with or without image URL) ---
+      setLoadingText('Submitting issue...');
+      
+      const issueData = {
+        title,
+        description,
+        category,
+        imageUrl, // Pass the URL (or null) to the backend
+        latitude: 18.5204, // Still hardcoded
+        longitude: 73.8567,
+      };
+
       const response = await createIssue(issueData);
 
-      // 4. Show a success notification
-      showNotification(
-        `Successfully submitted issue! ID: ${response.id}`,
-        "success"
-      );
+      // --- STEP 3: SUCCESS ---
+      showNotification(`Successfully submitted issue! ID: ${response.id}`, 'success');
 
-      // 5. Clear the form fields
-      setTitle("");
-      setDescription("");
-      setCategory("Pothole");
-      // setFile(null);
+      // Clear the form
+      setTitle('');
+      setDescription('');
+      setCategory('Pothole');
+      setFile(null);
+      if(fileInputRef.current) fileInputRef.current.value = null; // Reset file input
+
     } catch (apiError) {
-      // 6. Show an error notification
-      console.error("Error submitting issue:", apiError);
-      const errorMessage =
-        apiError.response &&
-        apiError.response.data &&
-        apiError.response.data.message
-          ? apiError.response.data.message
-          : "Failed to submit issue. Please try again.";
-
-      showNotification(errorMessage, "error");
+      // --- STEP 4: ERROR HANDLING ---
+      console.error("Failed to submit issue:", apiError);
+      // We use apiError.message because our fileService and issueService throw clean messages
+      showNotification(apiError.message || 'Failed to submit issue.', 'error');
     } finally {
       setLoading(false);
+      setLoadingText('');
     }
   };
 
@@ -75,15 +98,15 @@ function IssueForm() {
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 2, // Adds space between form elements
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
         maxWidth: 500,
-        margin: "auto", // Center the form
+        margin: 'auto',
         padding: 3,
-        backgroundColor: "white",
+        backgroundColor: 'white',
         borderRadius: 2,
-        boxShadow: "0 3px 10px rgb(0 0 0 / 0.1)",
+        boxShadow: '0 3px 10px rgb(0 0 0 / 0.1)',
       }}
     >
       <Typography variant="h5" component="h2" textAlign="center">
@@ -117,7 +140,7 @@ function IssueForm() {
         variant="outlined"
         required
         fullWidth
-        select // This turns the TextField into a dropdown
+        select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
         disabled={loading}
@@ -129,8 +152,34 @@ function IssueForm() {
         <MenuItem value="Other">Other</MenuItem>
       </TextField>
 
-      {/* We will add the File Upload button here in the next phase */}
+      {/* --- 6. NEW FILE INPUT FIELD --- */}
+      <Box>
+        <Button
+          variant="outlined"
+          component="label" // This makes the button act as a <label>
+          fullWidth
+          disabled={loading}
+          startIcon={<PhotoCamera />}
+        >
+          Upload Photo
+          {/* The actual, hidden file input */}
+          <input
+            type="file"
+            hidden
+            accept="image/*" // Only accept image files
+            onChange={handleFileChange}
+            ref={fileInputRef} // Link the ref
+          />
+        </Button>
+        {/* Show the name of the selected file */}
+        {file && (
+          <Alert severity="info" sx={{ mt: 1 }}>
+            Selected file: {file.name}
+          </Alert>
+        )}
+      </Box>
 
+      {/* --- 7. UPDATED SUBMIT BUTTON --- */}
       <Button
         type="submit"
         variant="contained"
@@ -138,12 +187,15 @@ function IssueForm() {
         disabled={loading}
         sx={{ mt: 2 }}
       >
-        {loading ? (
-          <CircularProgress size={24} color="inherit" />
-        ) : (
-          "Submit Issue"
-        )}
+        {/* Show loading spinner or text */}
+        {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit Issue'}
       </Button>
+      {/* Show loading text (e.g., "Uploading image...") */}
+      {loading && (
+        <Typography variant="caption" textAlign="center">
+          {loadingText}
+        </Typography>
+      )}
     </Box>
   );
 }
