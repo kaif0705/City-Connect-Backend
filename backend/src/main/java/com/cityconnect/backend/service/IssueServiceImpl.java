@@ -24,6 +24,7 @@ public class IssueServiceImpl implements IssueService {
     @Autowired
     private IssueRepository issueRepository;
 
+    // Create an Issue
     @Override
     @Transactional
     public IssueResponse createIssue(IssueRequest issueRequest) {
@@ -32,6 +33,7 @@ public class IssueServiceImpl implements IssueService {
         return mapToResponse(savedIssue);
     }
 
+    //Get all Issues
     @Override
     @Transactional(readOnly = true)
     public List<IssueResponse> getAllIssues() {
@@ -41,6 +43,7 @@ public class IssueServiceImpl implements IssueService {
                 .collect(Collectors.toList());
     }
 
+    // Update an Issue
     @Override
     @Transactional
     public IssueResponse updateIssueStatus(Long id, String newStatus) {
@@ -50,6 +53,20 @@ public class IssueServiceImpl implements IssueService {
         issueToUpdate.setStatus(newStatus);
         Issue updatedIssue = issueRepository.save(issueToUpdate);
         return mapToResponse(updatedIssue);
+    }
+
+    // Delete an Issue
+    @Override
+    @Transactional
+    public void deleteIssue(Long id) {
+        // 1. Check if the issue exists.
+        //    This will throw ResourceNotFoundException if it doesn't.
+        if (!issueRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Issue not found with id: " + id);
+        }
+
+        // 2. If it exists, delete it.
+        issueRepository.deleteById(id);
     }
 
 
@@ -62,6 +79,7 @@ public class IssueServiceImpl implements IssueService {
         issue.setCategory(dto.getCategory());
         issue.setLatitude(dto.getLatitude());
         issue.setLongitude(dto.getLongitude());
+        issue.setImageUrl(dto.getImageUrl());
         return issue;
     }
 
@@ -75,6 +93,7 @@ public class IssueServiceImpl implements IssueService {
         response.setLatitude(entity.getLatitude());
         response.setLongitude(entity.getLongitude());
         response.setCreatedAt(entity.getCreatedAt());
+        response.setImageUrl(entity.getImageUrl());
         return response;
     }
 }

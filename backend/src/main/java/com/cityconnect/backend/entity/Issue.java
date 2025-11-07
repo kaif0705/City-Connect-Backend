@@ -31,6 +31,9 @@ public class Issue {
     private Double latitude;
     private Double longitude;
 
+    //Image URL
+    private String imageUrl;
+
     // Automatically sets the timestamp when the entity is created
     @CreationTimestamp
     private Instant createdAt;

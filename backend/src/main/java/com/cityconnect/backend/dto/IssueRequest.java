@@ -20,6 +20,9 @@ public class IssueRequest {
     private Double latitude;
     private Double longitude;
 
+    //Image URL
+    private String imageUrl;
+
     // Note: We deliberately do NOT include 'id', 'status', or 'createdAt'.
     // These will be set by the backend, not by the user.
 }

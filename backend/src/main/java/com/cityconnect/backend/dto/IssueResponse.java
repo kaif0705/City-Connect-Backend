@@ -17,6 +17,7 @@ public class IssueResponse {
     private Double latitude;
     private Double longitude;
     private Instant createdAt;
+    private String imageUrl;
 
     // We can add more fields later, like:
     // private String submittedByUsername;
