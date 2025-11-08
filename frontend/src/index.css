@@ -2,6 +2,7 @@
 
 html {
   overflow-x: hidden;
+  background-color: #111; 
 }
 
 body {
@@ -12,7 +13,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* This is the blurry background image from your /public folder */
+  /* Your background image from the /public folder */
   background-image: url('/Uni2.jpg'); 
   background-size: cover;
   background-position: center;
@@ -26,9 +27,7 @@ body {
   overflow-x: hidden;
 }
 
-/* --- THIS IS THE NEW OVERLAY --- */
-/* This creates a dark, semi-transparent layer 
-   on top of the background image but behind the content */
+/* This is the dark overlay */
 body::before {
   content: '';
   position: absolute;
@@ -36,9 +35,8 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  /* This is a 30% black overlay. You can change 0.3 to 0.4 or 0.5 to make it darker */
+  /* Your 10% black overlay */
   background-color: rgba(0, 0, 0, 0.1); 
-  /* This puts the overlay behind your login box */
   z-index: -1; 
 }
 
@@ -48,28 +46,20 @@ code {
     monospace;
 }
 
-/* This rule helps the app content sit correctly on top of the overlay */
+/* This rule helps the app content sit correctly */
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
+/* Fix for browser autofill */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-    /* 1. Force the text color to be inherited (so it's not black) */
     -webkit-text-fill-color: inherit !important;
-    
-    /* 2. The Trick: Use a giant inset box-shadow to "paint over"
-       the browser's white background. We set it to transparent. */
     box-shadow: 0 0 0 1000px transparent inset !important;
-    
-    /* 3. Also force the background color */
     background-color: transparent !important;
-
-    /* 4. Ensure the transition is smooth */
     transition: background-color 5000s ease-in-out 0s;
 }
-

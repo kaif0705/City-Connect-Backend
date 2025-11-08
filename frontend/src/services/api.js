@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 1. Create the central Axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api/v1', // Port is 8080
+  baseURL: 'http://MIT-Connect-Backend-env.eba-m5kk2syq.ap-south-1.elasticbeanstalk.com/api/v1',
 });
 
 // 2. THIS IS THE "MAGIC": The Axios Interceptor
