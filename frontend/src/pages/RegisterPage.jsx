@@ -60,15 +60,29 @@ function RegisterPage() {
     <Container component="main" maxWidth="xs">
       <Box
         sx={{
-          padding: 4, 
+          padding: 4,
           marginTop: 8,
           // --- ADD THESE LINES FOR TRANSLUCENCY ---
-          backgroundColor: 'rgba(255, 255, 255, 0.1)', // White with 70% opacity
-          backdropFilter: 'blur(5px)', // Blurs the background behind the card
-          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)', // Optional: nicer shadow
-          borderRadius: '12px'
+          backgroundColor: "rgba(255, 255, 255, 0.1)", // White with 70% opacity
+          backdropFilter: "blur(5px)", // Blurs the background behind the card
+          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)", // Optional: nicer shadow
+          borderRadius: "12px",
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
         }}
       >
+        <Box
+          component="img"
+          src="/Logo.png" // Path from the 'public' folder
+          alt="MIT ADT University Logo"
+          sx={{
+            width: 'auto', // You can adjust the size
+            height: 100,
+            objectFit: 'contain',
+            mb: 2, // Margin bottom
+          }}
+        />
         <Typography component="h1" variant="h5">
           Sign Up
         </Typography>

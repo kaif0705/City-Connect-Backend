@@ -1,34 +1,22 @@
-import React from "react";
-import {
-  Routes,
-  Route,
-  Link as RouterLink,
-  useNavigate,
-} from "react-router-dom";
-import { useAuth } from "./context/AuthContext";
+import React from 'react';
+import { Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 
 // --- Import all our pages ---
-import SubmitPage from "./pages/SubmitPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import MyIssuesPage from "./pages/MyIssuesPage";
-import IssueDetailPage from "./pages/IssueDetailPage";
-import ProfilePage from "./pages/ProfilePage"; // <-- 1. IMPORT THE NEW PAGE
+import SubmitPage from './pages/SubmitPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import MyIssuesPage from './pages/MyIssuesPage';
+import IssueDetailPage from './pages/IssueDetailPage';
+import ProfilePage from './pages/ProfilePage';
 
 // --- Import our GUARDS ---
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 // --- Import MUI Components ---
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Container,
-} from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
 
 function App() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -36,22 +24,44 @@ function App() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate('/login');
   };
 
   return (
     <div className="app-container">
+      
       {/* --- The "Smart" MUI Navigation Bar --- */}
       <AppBar position="static">
         <Toolbar>
-          <Typography
-            variant="h6"
-            component={RouterLink}
-            to="/"
-            sx={{ flexGrow: 1, color: "inherit", textDecoration: "none" }}
+          
+          {/* --- THIS IS THE CHANGE --- */}
+          {/* We use a Box to group the logo and title together */}
+          <Box 
+            component={RouterLink} 
+            to="/" 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              flexGrow: 1, 
+              textDecoration: 'none', 
+              color: 'inherit' 
+            }}
           >
-            MIT-Connect
-          </Typography>
+            <Box
+              component="img"
+              src="/Logo.png"
+              alt="MIT-Connect Logo"
+              sx={{
+                height: 40, // Set height for navbar
+                mr: 2, // Margin-right to add space
+              }}
+            />
+            <Typography variant="h6" component="div">
+              MIT-Connect
+            </Typography>
+          </Box>
+          {/* --- END OF CHANGE --- */}
+
 
           {isAuthenticated ? (
             // --- User is Logged In ---
@@ -62,18 +72,16 @@ function App() {
               <Button component={RouterLink} to="/my-issues" color="inherit">
                 My Issues
               </Button>
-
-              {/* --- 2. ADD THE "PROFILE" LINK HERE --- */}
               <Button component={RouterLink} to="/profile" color="inherit">
                 Profile
               </Button>
-
-              {user?.role === "ROLE_ADMIN" && (
+              
+              {user?.role === 'ROLE_ADMIN' && (
                 <Button component={RouterLink} to="/admin" color="inherit">
                   Admin Dashboard
                 </Button>
               )}
-
+              
               <Button color="inherit" onClick={handleLogout}>
                 Logout ({user?.username})
               </Button>
@@ -91,7 +99,7 @@ function App() {
           )}
         </Toolbar>
       </AppBar>
-
+      
       {/* --- The Page Content Area --- */}
       <Container sx={{ mt: 4, mb: 4 }}>
         <Routes>
@@ -100,54 +108,53 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* --- 2. Protected Routes (for any logged-in user) --- */}
-          <Route
-            path="/"
+          <Route 
+            path="/" 
             element={
               <ProtectedRoute>
                 <SubmitPage />
               </ProtectedRoute>
-            }
+            } 
           />
-          <Route
-            path="/my-issues"
+          <Route 
+            path="/my-issues" 
             element={
               <ProtectedRoute>
                 <MyIssuesPage />
               </ProtectedRoute>
-            }
+            } 
           />
-          <Route
-            path="/issue/:id"
+          <Route 
+            path="/issue/:id" 
             element={
               <ProtectedRoute>
                 <IssueDetailPage />
               </ProtectedRoute>
-            }
+            } 
           />
-
-          {/* --- 3. ADD THE NEW "/profile" ROUTE --- */}
-          <Route
-            path="/profile"
+          <Route 
+            path="/profile" 
             element={
               <ProtectedRoute>
                 <ProfilePage />
               </ProtectedRoute>
-            }
+            } 
           />
-
+          
           {/* --- 4. Admin-Only Route --- */}
-          <Route
-            path="/admin"
+          <Route 
+            path="/admin" 
             element={
               <AdminRoute>
                 <AdminDashboardPage />
               </AdminRoute>
-            }
+            } 
           />
         </Routes>
       </Container>
+      
     </div>
-  ); // End of return
-} // End of App function
+  );
+}
 
 export default App;
