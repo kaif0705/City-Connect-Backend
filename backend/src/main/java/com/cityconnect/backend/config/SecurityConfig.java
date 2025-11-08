@@ -58,12 +58,15 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/media/**").permitAll() // Allows everyone to VIEW images
 
-                        // --- THIS IS THE FIX/UPDATE for Step 13 ---
                         // Citizen & Admin endpoints (for creating, viewing self, viewing details)
                         .requestMatchers("/api/v1/issues/**").hasAnyRole("CITIZEN", "ADMIN")
 
                         // User (Citizen or Admin) endpoints
                         .requestMatchers("/api/v1/files/upload").hasAnyRole("CITIZEN", "ADMIN") // Secures file uploads
+
+                        // --- THIS IS THE NEW RULE FOR STEP 1.5 ---
+                        // Secures the new GET, PUT, DELETE /api/v1/users/me endpoints
+                        .requestMatchers("/api/v1/users/me").hasAnyRole("CITIZEN", "ADMIN")
 
                         // Admin-only endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

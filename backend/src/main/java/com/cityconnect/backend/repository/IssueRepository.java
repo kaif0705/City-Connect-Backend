@@ -17,4 +17,5 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
      * sorted by creation date in descending order (newest first).
      */
     List<Issue> findByUserOrderByCreatedAtDesc(User user);
+    List<Issue> findByUser(User user);
 }

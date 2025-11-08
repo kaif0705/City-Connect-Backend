@@ -16,4 +16,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // We need these for our registration service (AuthService) to check for duplicates.
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
+    Boolean existsByEmailAndIdNot(String email, Long id);
 }
